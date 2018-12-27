@@ -6,371 +6,368 @@
 #include "Usr_Protocol.h"
 #include "Kits_Memory.h"
 
-/******************PCÍ¨ĞÅ**************************************/
+/******************PCé€šä¿¡**************************************/
 
-Tab_DI  DI_Variable[]=//±äÁ¿Êı¾İ±êÊ¶
-{
-//	{0x01,0x01,0x00,2,OFFSET(Var_Info,HardWare)},//
-	{0x01,0x01,0x00,2,offsetof(Var_Info,HardWare)},//
-	{0x01,0x01,0x01,2,offsetof(Var_Info,SoftWare)},//
-	{0x11,0x02,0x00,6,offsetof(Var_Info,DO)},//
-	{0x11,0x03,0x00,1,offsetof(Var_Info,T_Address)},//
-	{0x11,0x03,0x01,2,offsetof(Var_Info,T_Baudrate)},//
-	{0x11,0x04,0x00,1,offsetof(Var_Info,PC_Address)},//
-	{0x11,0x04,0x01,2,offsetof(Var_Info,PC_Baudrate)},//
+Tab_DI DI_Variable[] = //å˜é‡æ•°æ®æ ‡è¯†
+    {
+        //	{0x01,0x01,0x00,2,OFFSET(Var_Info,HardWare)},//
+        {0x01, 0x01, 0x00, 2, offsetof(Var_Info, HardWare)},    //
+        {0x01, 0x01, 0x01, 2, offsetof(Var_Info, SoftWare)},    //
+        {0x11, 0x02, 0x00, 6, offsetof(Var_Info, DO)},          //
+        {0x11, 0x03, 0x00, 1, offsetof(Var_Info, T_Address)},   //
+        {0x11, 0x03, 0x01, 2, offsetof(Var_Info, T_Baudrate)},  //
+        {0x11, 0x04, 0x00, 1, offsetof(Var_Info, PC_Address)},  //
+        {0x11, 0x04, 0x01, 2, offsetof(Var_Info, PC_Baudrate)}, //
 
-	//·ÀÖ¹Êı×é²éÕÒËÀÑ­»·
-	{0x00,0x00,0x00,0x00,0x00},//·ÀÖ¹ËÀÑ­»·
+        //é˜²æ­¢æ•°ç»„æŸ¥æ‰¾æ­»å¾ªç¯
+        {0x00, 0x00, 0x00, 0x00, 0x00}, //é˜²æ­¢æ­»å¾ªç¯
 
 };
 
-//²éÕÒDI
-BOOL CheckDI(ProtocolDIInfo* pDI)
+//æŸ¥æ‰¾DI
+BOOL CheckDI(ProtocolDIInfo *pDI)
 {
     const Tab_DI *DI_VAR;
-	// Ö¸¶¨Êı¾İ´æ·ÅÎ»ÖÃ
-	pDI->MomeryType = MEMORY_RAM;
-//	pDI->pfnWriteSuccessed = NULL;
+    // æŒ‡å®šæ•°æ®å­˜æ”¾ä½ç½®
+    pDI->MomeryType = MEMORY_RAM;
+    //	pDI->pfnWriteSuccessed = NULL;
 
-	DI_VAR=DI_Variable;
+    DI_VAR = DI_Variable;
 
-	while(DI_VAR->LEN)
-	{
-		if((pDI->DI.Bytes[1]==DI_VAR->DI1)&&(pDI->DI.Bytes[0]==DI_VAR->DI0))//²éÕÒDI1¡¢DI0¡¢
-		{			
-			// Êı¾İÀàĞÍ
-			if(pDI->Type != TYPE_R)	  //¶ÁÊı¾İ		 
-			{
-				if(DI_VAR->DIType==0x01)//Ö»¶Á
-				{
-					return FALSE;
-				}
-			}
-			pDI->Length = DI_VAR->LEN;
-			pDI->Address = DI_VAR->DataAddr;
-			return TRUE;
-		}
-		DI_VAR++;
-	}
-	return FALSE;
+    while (DI_VAR->LEN)
+    {
+        if ((pDI->DI.Bytes[1] == DI_VAR->DI1) && (pDI->DI.Bytes[0] == DI_VAR->DI0)) //æŸ¥æ‰¾DI1ã€DI0ã€
+        {
+            // æ•°æ®ç±»å‹
+            if (pDI->Type != TYPE_R) //è¯»æ•°æ®
+            {
+                if (DI_VAR->DIType == 0x01) //åªè¯»
+                {
+                    return FALSE;
+                }
+            }
+            pDI->Length = DI_VAR->LEN;
+            pDI->Address = DI_VAR->DataAddr;
+            return TRUE;
+        }
+        DI_VAR++;
+    }
+    return FALSE;
 }
-//²éÕÒÊı¾İ
-BOOL Checkout(ProtocolDIInfo* pDI,U8* pBuffer)
+//æŸ¥æ‰¾æ•°æ®
+BOOL Checkout(ProtocolDIInfo *pDI, U8 *pBuffer)
 {
-	U32 Address;
-	U8 Length;
-	U32 Ptr;
- 	
-	Address =pDI->Address;
-	Length =pDI->Length;
+    U32 Address;
+    U8 Length;
+    U32 Ptr;
 
-	if(pDI->OpsType == OPS_READ)
-	{
-			rt_kprintf("pBuffer: 0x%02x 0x%02x 0x%02x 0x%02x\n", pBuffer[0],pBuffer[1],pBuffer[2],pBuffer[3]);
+    Address = pDI->Address;
+    Length = pDI->Length;
 
-		// ¶Á²Ù×÷
-		if(pDI->MomeryType == MEMORY_RAM)
-		{
-			Ptr=(U32)&g_Var_inst;	//±äÁ¿Êı¾İÆğÊ¼µØÖ·
-			Ptr+=(U8)Address;
-			memcpy(pBuffer,(U8*)Ptr,Length);
-			return TRUE;
-		}
-	}
-	else if(pDI->OpsType == OPS_WRITE)
-	{
-		// Ğ´²Ù×÷
-		if(pDI->MomeryType == MEMORY_RAM)
-		{
-			Ptr=(U32)&g_Var_inst;	//±äÁ¿Êı¾İÆğÊ¼µØÖ·
-			Ptr+=(U8)Address;
-			memcpy((U8*)Ptr,pBuffer,Length);
-			g_Var_inst.DO[6]|=DO_UPDATE;
-			return TRUE;
-		}
-	}
-	return FALSE;
+    if (pDI->OpsType == OPS_READ)
+    {
+        rt_kprintf("pBuffer: 0x%02x 0x%02x 0x%02x 0x%02x\n", pBuffer[0], pBuffer[1], pBuffer[2], pBuffer[3]);
+
+        // è¯»æ“ä½œ
+        if (pDI->MomeryType == MEMORY_RAM)
+        {
+            Ptr = (U32)&g_Var_inst; //å˜é‡æ•°æ®èµ·å§‹åœ°å€
+            Ptr += (U8)Address;
+            memcpy(pBuffer, (U8 *)Ptr, Length);
+            return TRUE;
+        }
+    }
+    else if (pDI->OpsType == OPS_WRITE)
+    {
+        // å†™æ“ä½œ
+        if (pDI->MomeryType == MEMORY_RAM)
+        {
+            Ptr = (U32)&g_Var_inst; //å˜é‡æ•°æ®èµ·å§‹åœ°å€
+            Ptr += (U8)Address;
+            memcpy((U8 *)Ptr, pBuffer, Length);
+            g_Var_inst.DO[6] |= DO_UPDATE;
+            return TRUE;
+        }
+    }
+    return FALSE;
 }
 
-static BOOL Handle_CMD_READ(Comm_st* ProtocolFrame)
+static BOOL Handle_CMD_READ(Comm_st *ProtocolFrame)
 {
-	ProtocolDIInfo pDIInfo;
+    ProtocolDIInfo pDIInfo;
 
-				g_Var_inst.Test[1]=4;
-	    	rt_kprintf("g_Var_inst.Test[1]: 0x%02x \n", g_Var_inst.Test[1]);
-	// ÉèÖÃÄ¬ÈÏÎªÎ´ÖªÃüÁî
-	ProtocolFrame->ProtocolHandleStatus = 0;
+    g_Var_inst.Test[1] = 4;
+    rt_kprintf("g_Var_inst.Test[1]: 0x%02x \n", g_Var_inst.Test[1]);
+    // è®¾ç½®é»˜è®¤ä¸ºæœªçŸ¥å‘½ä»¤
+    ProtocolFrame->ProtocolHandleStatus = 0;
 
-	// ¼ì²éÊı¾İ³¤¶ÈÊÇ·ñÂú×ãÃüÁî×ÖµÄÊı¾İ³¤¶È(¶ÁÊı¾İÓĞÈıÖÖ¸ñÊ½,³¤¶È·Ö±ğÎª1,2,4)
-	if(!((ProtocolFrame->pFrame->Length == 0x01) || \
-			(ProtocolFrame->pFrame->Length == 0x02) ||\
-			(ProtocolFrame->pFrame->Length == 0x04)))
-	{
-		// Êı¾İ³¤¶È²»ÕıÈ·,·µ»Ø²»ÄÜÊ¶±ğµÄÃüÁî
-		ProtocolFrame->ProtocolHandleStatus |= PROTOCOL_HANDLE_UNDEFINE;
-		return TRUE;
-	}
-					g_Var_inst.Test[1]=5;
-	    	rt_kprintf("g_Var_inst.Test[1]: 0x%02x \n", g_Var_inst.Test[1]);
-	// ¸´ÖÆÊı¾İ±êÊ¶
-	ReverseCopy(pDIInfo.DI.Bytes,ProtocolFrame->pFrame->Data,2);
-		    	rt_kprintf("pDIInfo.DI.Bytes: 0x%02x 0x%02x \n", pDIInfo.DI.Bytes[0],pDIInfo.DI.Bytes[1]);
-	pDIInfo.Type = TYPE_R;	 //¶ÁÊı¾İ
-	// Check Êı¾İ±êÊ¶
-	if(!CheckDI(&pDIInfo))
-	{
-		// ·µ»Ø²»Ö§³ÖµÄÊı¾İ±êÊ¶
-		ProtocolFrame->ProtocolHandleStatus |= PROTOCOL_HANDLE_UNDEFINE;
-		return TRUE;
-	}
-					g_Var_inst.Test[1]=6;
-	    	rt_kprintf("g_Var_inst.Test[1]: 0x%02x \n", g_Var_inst.Test[1]);
-	// ¸ù¾İCheck³öµÄÊı¾İ±êÊ¶¶ÔÓ¦µÄÊı¾İĞÅÏ¢,×é½¨Êı¾İ°ü(Êı¾İ³¤¶È³¬¹ı)
-	ProtocolFrame->pFrame->Length += pDIInfo.Length;
+    // æ£€æŸ¥æ•°æ®é•¿åº¦æ˜¯å¦æ»¡è¶³å‘½ä»¤å­—çš„æ•°æ®é•¿åº¦(è¯»æ•°æ®æœ‰ä¸‰ç§æ ¼å¼,é•¿åº¦åˆ†åˆ«ä¸º1,2,4)
+    if (!((ProtocolFrame->pFrame->Length == 0x01) ||
+          (ProtocolFrame->pFrame->Length == 0x02) ||
+          (ProtocolFrame->pFrame->Length == 0x04)))
+    {
+        // æ•°æ®é•¿åº¦ä¸æ­£ç¡®,è¿”å›ä¸èƒ½è¯†åˆ«çš„å‘½ä»¤
+        ProtocolFrame->ProtocolHandleStatus |= PROTOCOL_HANDLE_UNDEFINE;
+        return TRUE;
+    }
+    g_Var_inst.Test[1] = 5;
+    rt_kprintf("g_Var_inst.Test[1]: 0x%02x \n", g_Var_inst.Test[1]);
+    // å¤åˆ¶æ•°æ®æ ‡è¯†
+    ReverseCopy(pDIInfo.DI.Bytes, ProtocolFrame->pFrame->Data, 2);
+    rt_kprintf("pDIInfo.DI.Bytes: 0x%02x 0x%02x \n", pDIInfo.DI.Bytes[0], pDIInfo.DI.Bytes[1]);
+    pDIInfo.Type = TYPE_R; //è¯»æ•°æ®
+    // Check æ•°æ®æ ‡è¯†
+    if (!CheckDI(&pDIInfo))
+    {
+        // è¿”å›ä¸æ”¯æŒçš„æ•°æ®æ ‡è¯†
+        ProtocolFrame->ProtocolHandleStatus |= PROTOCOL_HANDLE_UNDEFINE;
+        return TRUE;
+    }
+    g_Var_inst.Test[1] = 6;
+    rt_kprintf("g_Var_inst.Test[1]: 0x%02x \n", g_Var_inst.Test[1]);
+    // æ ¹æ®Checkå‡ºçš„æ•°æ®æ ‡è¯†å¯¹åº”çš„æ•°æ®ä¿¡æ¯,ç»„å»ºæ•°æ®åŒ…(æ•°æ®é•¿åº¦è¶…è¿‡)
+    ProtocolFrame->pFrame->Length += pDIInfo.Length;
 
-	// ¸ù¾İÊı¾İĞÅÏ¢¶ÁÈ¡Êı¾İ
-	pDIInfo.OpsType = OPS_READ;
-	if(!Checkout(&pDIInfo,(ProtocolFrame->pFrame->Data)+2))
-	{
-		// ¶ÁÈ¡Êı¾İÊ§°Ü,·µ»ØÎ´Öª´íÎó
-		ProtocolFrame->ProtocolHandleStatus |= PROTOCOL_HANDLE_OTHER_ERROR;
-		return TRUE;
-	}
-					g_Var_inst.Test[1]=7;
-	    	rt_kprintf("g_Var_inst.Test[1]: 0x%02x \n", g_Var_inst.Test[1]);
-	// ÉèÖÃÃüÁî´¦Àí³É¹¦
-	ProtocolFrame->ProtocolHandleStatus |= PROTOCOL_HANDLE_SUCCEED;
+    // æ ¹æ®æ•°æ®ä¿¡æ¯è¯»å–æ•°æ®
+    pDIInfo.OpsType = OPS_READ;
+    if (!Checkout(&pDIInfo, (ProtocolFrame->pFrame->Data) + 2))
+    {
+        // è¯»å–æ•°æ®å¤±è´¥,è¿”å›æœªçŸ¥é”™è¯¯
+        ProtocolFrame->ProtocolHandleStatus |= PROTOCOL_HANDLE_OTHER_ERROR;
+        return TRUE;
+    }
+    g_Var_inst.Test[1] = 7;
+    rt_kprintf("g_Var_inst.Test[1]: 0x%02x \n", g_Var_inst.Test[1]);
+    // è®¾ç½®å‘½ä»¤å¤„ç†æˆåŠŸ
+    ProtocolFrame->ProtocolHandleStatus |= PROTOCOL_HANDLE_SUCCEED;
     return TRUE;
-
 }
 
-// Ğ´Êı¾İÃüÁî
-static void Handle_CMD_Write(Comm_st* ProtocolFrame)
+// å†™æ•°æ®å‘½ä»¤
+static void Handle_CMD_Write(Comm_st *ProtocolFrame)
 {
-	ProtocolDIInfo pDIInfo;
+    ProtocolDIInfo pDIInfo;
 
-	// ÃüÁî´¦Àí×´Ì¬¸´Î»,¸ù¾İÃüÁî´¦Àí½á¹û,ÉèÖÃ¶ÔÓ¦µÄÎ»±êÖ¾
-	ProtocolFrame->ProtocolHandleStatus = 0;
+    // å‘½ä»¤å¤„ç†çŠ¶æ€å¤ä½,æ ¹æ®å‘½ä»¤å¤„ç†ç»“æœ,è®¾ç½®å¯¹åº”çš„ä½æ ‡å¿—
+    ProtocolFrame->ProtocolHandleStatus = 0;
 
-	// ¼ì²éÊı¾İ³¤¶ÈÊÇ·ñÂú×ãÃüÁî×ÖµÄÊı¾İ³¤¶È(Ğ´Êı¾İ³¤¶ÈÖÁÉÙÓ¦¸Ã´óÓÚ12×Ö½Ú)
-	if(ProtocolFrame->pFrame->Length < 3)
-	{
-		// Êı¾İ³¤¶È²»ÕıÈ·,·µ»Ø²»ÄÜÊ¶±ğµÄÃüÁî
-		ProtocolFrame->ProtocolHandleStatus |= PROTOCOL_HANDLE_UNDEFINE;
-		return;
-	}
-	// ¸´ÖÆÊı¾İ±êÊ¶
-	ReverseCopy(pDIInfo.DI.Bytes,ProtocolFrame->pFrame->Data,2);
+    // æ£€æŸ¥æ•°æ®é•¿åº¦æ˜¯å¦æ»¡è¶³å‘½ä»¤å­—çš„æ•°æ®é•¿åº¦(å†™æ•°æ®é•¿åº¦è‡³å°‘åº”è¯¥å¤§äº12å­—èŠ‚)
+    if (ProtocolFrame->pFrame->Length < 3)
+    {
+        // æ•°æ®é•¿åº¦ä¸æ­£ç¡®,è¿”å›ä¸èƒ½è¯†åˆ«çš„å‘½ä»¤
+        ProtocolFrame->ProtocolHandleStatus |= PROTOCOL_HANDLE_UNDEFINE;
+        return;
+    }
+    // å¤åˆ¶æ•°æ®æ ‡è¯†
+    ReverseCopy(pDIInfo.DI.Bytes, ProtocolFrame->pFrame->Data, 2);
 
-	pDIInfo.Type = TYPE_W;	 //Ğ´Êı¾İ
-	// Check Êı¾İ±êÊ¶
-	if(!CheckDI(&pDIInfo))
-	{
-		// ·µ»Ø²»Ö§³ÖµÄÊı¾İ±êÊ¶
-		ProtocolFrame->ProtocolHandleStatus |= PROTOCOL_HANDLE_NO_SUPPORT_ERROR;
-		return;
-	}	
+    pDIInfo.Type = TYPE_W; //å†™æ•°æ®
+    // Check æ•°æ®æ ‡è¯†
+    if (!CheckDI(&pDIInfo))
+    {
+        // è¿”å›ä¸æ”¯æŒçš„æ•°æ®æ ‡è¯†
+        ProtocolFrame->ProtocolHandleStatus |= PROTOCOL_HANDLE_NO_SUPPORT_ERROR;
+        return;
+    }
 
-	// ¸ù¾İCheck³öµÄÊı¾İ±êÊ¶¶ÔÓ¦µÄÊı¾İĞÅÏ¢,×é½¨Êı¾İ°ü(Êı¾İ³¤¶È³¬¹ı)
-	ProtocolFrame->pFrame->Length = 0;
-	
-	// ¸ù¾İÊı¾İĞÅÏ¢¶ÁĞ´Êı¾İ
-	pDIInfo.OpsType = OPS_WRITE;
-	if(!Checkout(&pDIInfo,(ProtocolFrame->pFrame->Data)+2))
-	{
-		// ¶ÁÈ¡Êı¾İÊ§°Ü,·µ»ØÎ´Öª´íÎó
-		ProtocolFrame->ProtocolHandleStatus |= PROTOCOL_HANDLE_OTHER_ERROR;
-		return;
-	}
-	g_Var_inst.Test[1]=9;
-	rt_kprintf("g_Var_inst.Test[1]: 0x%02x \n", g_Var_inst.Test[1]);	
-	rt_kprintf("g_Var_inst.DO: 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x\n", 
-	g_Var_inst.DO[0],g_Var_inst.DO[1],g_Var_inst.DO[2],g_Var_inst.DO[3],
-	g_Var_inst.DO[4],g_Var_inst.DO[5],g_Var_inst.DO[6]);
-	// ÉèÖÃÃüÁî´¦Àí³É¹¦
-	ProtocolFrame->ProtocolHandleStatus |= PROTOCOL_HANDLE_SUCCEED;
+    // æ ¹æ®Checkå‡ºçš„æ•°æ®æ ‡è¯†å¯¹åº”çš„æ•°æ®ä¿¡æ¯,ç»„å»ºæ•°æ®åŒ…(æ•°æ®é•¿åº¦è¶…è¿‡)
+    ProtocolFrame->pFrame->Length = 0;
 
-	return;
+    // æ ¹æ®æ•°æ®ä¿¡æ¯è¯»å†™æ•°æ®
+    pDIInfo.OpsType = OPS_WRITE;
+    if (!Checkout(&pDIInfo, (ProtocolFrame->pFrame->Data) + 2))
+    {
+        // è¯»å–æ•°æ®å¤±è´¥,è¿”å›æœªçŸ¥é”™è¯¯
+        ProtocolFrame->ProtocolHandleStatus |= PROTOCOL_HANDLE_OTHER_ERROR;
+        return;
+    }
+    g_Var_inst.Test[1] = 9;
+    rt_kprintf("g_Var_inst.Test[1]: 0x%02x \n", g_Var_inst.Test[1]);
+    rt_kprintf("g_Var_inst.DO: 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x\n",
+               g_Var_inst.DO[0], g_Var_inst.DO[1], g_Var_inst.DO[2], g_Var_inst.DO[3],
+               g_Var_inst.DO[4], g_Var_inst.DO[5], g_Var_inst.DO[6]);
+    // è®¾ç½®å‘½ä»¤å¤„ç†æˆåŠŸ
+    ProtocolFrame->ProtocolHandleStatus |= PROTOCOL_HANDLE_SUCCEED;
+
+    return;
 }
 
-// Ğ´µØÖ·
-static void Handle_CMD_T_ADDRESS_BAUDRATE(Comm_st* ProtocolFrame)
+// å†™åœ°å€
+static void Handle_CMD_T_ADDRESS_BAUDRATE(Comm_st *ProtocolFrame)
 {
-	ProtocolDIInfo pDIInfo;
+    ProtocolDIInfo pDIInfo;
 
-	// ÃüÁî´¦Àí×´Ì¬¸´Î»,¸ù¾İÃüÁî´¦Àí½á¹û,ÉèÖÃ¶ÔÓ¦µÄÎ»±êÖ¾
-	ProtocolFrame->ProtocolHandleStatus = 0;
+    // å‘½ä»¤å¤„ç†çŠ¶æ€å¤ä½,æ ¹æ®å‘½ä»¤å¤„ç†ç»“æœ,è®¾ç½®å¯¹åº”çš„ä½æ ‡å¿—
+    ProtocolFrame->ProtocolHandleStatus = 0;
 
-//	// ¼ì²éÊı¾İ³¤¶ÈÊÇ·ñÂú×ãÃüÁî×ÖµÄÊı¾İ³¤¶È(Ğ´Êı¾İ³¤¶ÈÖÁÉÙÓ¦¸Ã´óÓÚ12×Ö½Ú)
-//	if(ProtocolFrame->pFrame->Length < 3)
-//	{
-//		// Êı¾İ³¤¶È²»ÕıÈ·,·µ»Ø²»ÄÜÊ¶±ğµÄÃüÁî
-//		ProtocolFrame->ProtocolHandleStatus |= PROTOCOL_HANDLE_UNDEFINE;
-//		return;
-//	}
-	// ¸´ÖÆÊı¾İ±êÊ¶
-	ReverseCopy(pDIInfo.DI.Bytes,ProtocolFrame->pFrame->Data,2);
+    //	// æ£€æŸ¥æ•°æ®é•¿åº¦æ˜¯å¦æ»¡è¶³å‘½ä»¤å­—çš„æ•°æ®é•¿åº¦(å†™æ•°æ®é•¿åº¦è‡³å°‘åº”è¯¥å¤§äº12å­—èŠ‚)
+    //	if(ProtocolFrame->pFrame->Length < 3)
+    //	{
+    //		// æ•°æ®é•¿åº¦ä¸æ­£ç¡®,è¿”å›ä¸èƒ½è¯†åˆ«çš„å‘½ä»¤
+    //		ProtocolFrame->ProtocolHandleStatus |= PROTOCOL_HANDLE_UNDEFINE;
+    //		return;
+    //	}
+    // å¤åˆ¶æ•°æ®æ ‡è¯†
+    ReverseCopy(pDIInfo.DI.Bytes, ProtocolFrame->pFrame->Data, 2);
 
-	if((pDIInfo.DI.Bytes[1]==0x03)&&(pDIInfo.DI.Bytes[0]==0x00))
-	{
-		//¸´ÖÆÊı¾İ
-		ReverseCopy(&g_Var_inst.PC_Address ,(ProtocolFrame->pFrame->Data)+2,1);
-	}
-	else 	if((pDIInfo.DI.Bytes[1]==0x03)&&(pDIInfo.DI.Bytes[0]==0x01))
-	{
-		//¸´ÖÆÊı¾İ
-		ReverseCopy(g_Var_inst.T_Baudrate.Bytes ,(ProtocolFrame->pFrame->Data)+2,2);
-	}
-	
-	Comm_T_Init(g_Var_inst.PC_Address,1,g_Var_inst.PC_Baudrate.Value,COM_PAR_NONE);
-	// ¸ù¾İCheck³öµÄÊı¾İ±êÊ¶¶ÔÓ¦µÄÊı¾İĞÅÏ¢,×é½¨Êı¾İ°ü(Êı¾İ³¤¶È³¬¹ı)
-	ProtocolFrame->pFrame->Length = 0;
-	
-	g_Var_inst.Test[1]=9;
-	rt_kprintf("g_Var_inst.Test[1]: 0x%02x \n", g_Var_inst.Test[1]);	
-	rt_kprintf("g_Var_inst.T_Address: 0x%02x\n", 
-	g_Var_inst.T_Address);
-	// ÉèÖÃÃüÁî´¦Àí³É¹¦
-	ProtocolFrame->ProtocolHandleStatus |= PROTOCOL_HANDLE_SUCCEED;
+    if ((pDIInfo.DI.Bytes[1] == 0x03) && (pDIInfo.DI.Bytes[0] == 0x00))
+    {
+        //å¤åˆ¶æ•°æ®
+        ReverseCopy(&g_Var_inst.PC_Address, (ProtocolFrame->pFrame->Data) + 2, 1);
+    }
+    else if ((pDIInfo.DI.Bytes[1] == 0x03) && (pDIInfo.DI.Bytes[0] == 0x01))
+    {
+        //å¤åˆ¶æ•°æ®
+        ReverseCopy(g_Var_inst.T_Baudrate.Bytes, (ProtocolFrame->pFrame->Data) + 2, 2);
+    }
 
-	return;
+    Comm_T_Init(g_Var_inst.PC_Address, 1, g_Var_inst.PC_Baudrate.Value, COM_PAR_NONE);
+    // æ ¹æ®Checkå‡ºçš„æ•°æ®æ ‡è¯†å¯¹åº”çš„æ•°æ®ä¿¡æ¯,ç»„å»ºæ•°æ®åŒ…(æ•°æ®é•¿åº¦è¶…è¿‡)
+    ProtocolFrame->pFrame->Length = 0;
+
+    g_Var_inst.Test[1] = 9;
+    rt_kprintf("g_Var_inst.Test[1]: 0x%02x \n", g_Var_inst.Test[1]);
+    rt_kprintf("g_Var_inst.T_Address: 0x%02x\n",
+               g_Var_inst.T_Address);
+    // è®¾ç½®å‘½ä»¤å¤„ç†æˆåŠŸ
+    ProtocolFrame->ProtocolHandleStatus |= PROTOCOL_HANDLE_SUCCEED;
+
+    return;
 }
 
-// Í¸´«ÃüÁî
-static BOOL  Handle_CMD_Tansparent(Comm_st* ProtocolFrame)
+// é€ä¼ å‘½ä»¤
+static BOOL Handle_CMD_Tansparent(Comm_st *ProtocolFrame)
 {
-	U8 DI[2];
+    U8 DI[2];
 
-	// ÃüÁî´¦Àí×´Ì¬¸´Î»,¸ù¾İÃüÁî´¦Àí½á¹û,ÉèÖÃ¶ÔÓ¦µÄÎ»±êÖ¾
-	ProtocolFrame->ProtocolHandleStatus = 0;
-	switch(Comm_PC_inst.State)
-	{
-		case 0x00:
-			// ¼ì²éÊı¾İ³¤¶ÈÊÇ·ñÂú×ãÃüÁî×ÖµÄÊı¾İ³¤¶È(Ğ´Êı¾İ³¤¶ÈÖÁÉÙÓ¦¸Ã´óÓÚ8×Ö½Ú)
-			if(ProtocolFrame->pFrame->Length < 8)
-			{
-				// Êı¾İ³¤¶È²»ÕıÈ·,·µ»Ø²»ÄÜÊ¶±ğµÄÃüÁî
-				ProtocolFrame->ProtocolHandleStatus |= PROTOCOL_HANDLE_UNDEFINE;
-				return TRUE;
-			}
-			// ¸´ÖÆÊı¾İ±êÊ¶
-			ReverseCopy(DI,ProtocolFrame->pFrame->Data,2);
-			if((DI[0]==0x00)&&(DI[1]==0x05))	//Í¸´«ÃüÁî
-			{
-				Comm_T_inst.State=COM_T_RCV;//½ÓÊÕµ½PC¶ËÍ¨ĞÅÃüÁî
-				//¸´ÖÆÊı¾İ
-				Comm_T_inst.DataCount=ProtocolFrame->pFrame->Length;
-				memcpy(Comm_T_inst.Buffer,ProtocolFrame->pFrame->Data,Comm_T_inst.DataCount);
-			}
-	    	rt_kprintf("DI[0]: 0x%02x,DI[1]: 0x%02x,DataCount: 0x%02x \n", DI[0],DI[1],Comm_T_inst.DataCount);			
-			return FALSE;
-		case COM_PC_RCV:
-			Comm_PC_inst.State=0x00;//½ÓÊÕµ½PC¶ËÍ¨ĞÅÃü
-			ProtocolFrame->pFrame->Length=Comm_T_inst.DataCount+2;//¼Ó2¸ö×Ö½ÚDI
-			memcpy((ProtocolFrame->pFrame->Data)+2,Comm_T_inst.Buffer,Comm_T_inst.DataCount);			
-			// ÉèÖÃÃüÁî´¦Àí³É¹¦
-			ProtocolFrame->ProtocolHandleStatus |= PROTOCOL_HANDLE_SUCCEED;
-				g_Var_inst.Test[1]=11;
-	    	rt_kprintf("g_Var_inst.Test[1]: 0x%02x \n", g_Var_inst.Test[1]);
-			return TRUE;		
-		default:
-			// Êı¾İ³¤¶È²»ÕıÈ·,·µ»Ø²»ÄÜÊ¶±ğµÄÃüÁî
-			ProtocolFrame->ProtocolHandleStatus |= PROTOCOL_HANDLE_UNDEFINE;
-			break;
-
-	}
-			return FALSE;
+    // å‘½ä»¤å¤„ç†çŠ¶æ€å¤ä½,æ ¹æ®å‘½ä»¤å¤„ç†ç»“æœ,è®¾ç½®å¯¹åº”çš„ä½æ ‡å¿—
+    ProtocolFrame->ProtocolHandleStatus = 0;
+    switch (Comm_PC_inst.State)
+    {
+    case 0x00:
+        // æ£€æŸ¥æ•°æ®é•¿åº¦æ˜¯å¦æ»¡è¶³å‘½ä»¤å­—çš„æ•°æ®é•¿åº¦(å†™æ•°æ®é•¿åº¦è‡³å°‘åº”è¯¥å¤§äº8å­—èŠ‚)
+        if (ProtocolFrame->pFrame->Length < 8)
+        {
+            // æ•°æ®é•¿åº¦ä¸æ­£ç¡®,è¿”å›ä¸èƒ½è¯†åˆ«çš„å‘½ä»¤
+            ProtocolFrame->ProtocolHandleStatus |= PROTOCOL_HANDLE_UNDEFINE;
+            return TRUE;
+        }
+        // å¤åˆ¶æ•°æ®æ ‡è¯†
+        ReverseCopy(DI, ProtocolFrame->pFrame->Data, 2);
+        if ((DI[0] == 0x00) && (DI[1] == 0x05)) //é€ä¼ å‘½ä»¤
+        {
+            Comm_T_inst.State = COM_T_RCV; //æ¥æ”¶åˆ°PCç«¯é€šä¿¡å‘½ä»¤
+            //å¤åˆ¶æ•°æ®
+            Comm_T_inst.DataCount = ProtocolFrame->pFrame->Length;
+            memcpy(Comm_T_inst.Buffer, ProtocolFrame->pFrame->Data, Comm_T_inst.DataCount);
+        }
+        rt_kprintf("DI[0]: 0x%02x,DI[1]: 0x%02x,DataCount: 0x%02x \n", DI[0], DI[1], Comm_T_inst.DataCount);
+        return FALSE;
+    case COM_PC_RCV:
+        Comm_PC_inst.State = 0x00;                                 //æ¥æ”¶åˆ°PCç«¯é€šä¿¡å‘½
+        ProtocolFrame->pFrame->Length = Comm_T_inst.DataCount + 2; //åŠ 2ä¸ªå­—èŠ‚DI
+        memcpy((ProtocolFrame->pFrame->Data) + 2, Comm_T_inst.Buffer, Comm_T_inst.DataCount);
+        // è®¾ç½®å‘½ä»¤å¤„ç†æˆåŠŸ
+        ProtocolFrame->ProtocolHandleStatus |= PROTOCOL_HANDLE_SUCCEED;
+        g_Var_inst.Test[1] = 11;
+        rt_kprintf("g_Var_inst.Test[1]: 0x%02x \n", g_Var_inst.Test[1]);
+        return TRUE;
+    default:
+        // æ•°æ®é•¿åº¦ä¸æ­£ç¡®,è¿”å›ä¸èƒ½è¯†åˆ«çš„å‘½ä»¤
+        ProtocolFrame->ProtocolHandleStatus |= PROTOCOL_HANDLE_UNDEFINE;
+        break;
+    }
+    return FALSE;
 }
 
-// ´ò°üĞ­Òé,²¢Æô¶¯·¢ËÍÊı¾İ
-static BOOL Packet(Comm_st* ProtocolFrame)
+// æ‰“åŒ…åè®®,å¹¶å¯åŠ¨å‘é€æ•°æ®
+static BOOL Packet(Comm_st *ProtocolFrame)
 {
-	U8  i,Sum;
-	U8*  pPacket;
+    U8 i, Sum;
+    U8 *pPacket;
 
-	// ¼ì²éÃüÁî´¦Àí½á¹ûÊÇ·ñ³É¹¦
-	if(ProtocolFrame->ProtocolHandleStatus & PROTOCOL_HANDLE_SUCCEED)
-	{
-		// ÃüÁî³É¹¦µÄÖ´ĞĞ
-		ProtocolFrame->pFrame->CMD |= PROTOCOL_CMD_RESPONSE_OK;
-	}
-	else
-	{
-		// ÃüÁî´¦ÀíÊ§°ÜµÄ»°,¼ì²éÊÇ·ñÎª²»ÄÜÊ¶±ğµÄÃüÁî
-		if(ProtocolFrame->ProtocolHandleStatus & PROTOCOL_HANDLE_UNDEFINE)
-		{
-//			// Îª²»ÄÜÊ¶±ğµÄÃüÁî,²»ÏìÓ¦Í¨Ñ¶Ö¡,Í¨Ñ¶Á´Â·¸´Î»´¦Àí
-//			ProtocolFrame->ResetProtocol(ProtocolFrame->CommID);
-			return FALSE;
-		}
-		// ²»ÊÇ²»ÄÜÊ¶±ğµÄÃüÁî,·µ»Ø´íÎóĞÅÏ¢×Ö
-		ProtocolFrame->pFrame->CMD |= PROTOCOL_CMD_RESPONSE_ERR;
-		ProtocolFrame->pFrame->Length = 1;
-		ProtocolFrame->pFrame->Data[0] = ProtocolFrame->ProtocolHandleStatus;
-	}
-					g_Var_inst.Test[1]=8;
-	    	rt_kprintf("g_Var_inst.Test[1]: 0x%02x \n", g_Var_inst.Test[1]);
-	// ×ÜÊı¾İ³¤¶È
-	ProtocolFrame->DataCount = (4 + ProtocolFrame->pFrame->Length);
-	// ¼ÆËã¼ìÑéºÍ
-	Sum = 0;
-	pPacket = (U8*)(ProtocolFrame->pFrame);	
-	for( i= 0;i < ProtocolFrame->DataCount;i ++)
-	{
-		Sum += *(pPacket++);
-	}
-	*(pPacket) = Sum;
-	*(pPacket+1) = FRAME_END;
-	ProtocolFrame->DataCount += 2;
-	memcpy(Comm_PC_inst.Buffer,ProtocolFrame->pFrame,ProtocolFrame->DataCount);
-	    	rt_kprintf("Comm_PC_inst.Buffer: 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x\n", 
-			Comm_PC_inst.Buffer[0],Comm_PC_inst.Buffer[1],Comm_PC_inst.Buffer[2],Comm_PC_inst.Buffer[3],Comm_PC_inst.Buffer[4],Comm_PC_inst.Buffer[5],
-			Comm_PC_inst.Buffer[6],Comm_PC_inst.Buffer[7],Comm_PC_inst.Buffer[8],Comm_PC_inst.Buffer[9],Comm_PC_inst.Buffer[10],Comm_PC_inst.Buffer[11]);
-	//·¢ËÍÊı¾İ
-	Comm_PC_PortSerialPutByte(Comm_PC_inst.Buffer,ProtocolFrame->DataCount)	;
-	return TRUE;
+    // æ£€æŸ¥å‘½ä»¤å¤„ç†ç»“æœæ˜¯å¦æˆåŠŸ
+    if (ProtocolFrame->ProtocolHandleStatus & PROTOCOL_HANDLE_SUCCEED)
+    {
+        // å‘½ä»¤æˆåŠŸçš„æ‰§è¡Œ
+        ProtocolFrame->pFrame->CMD |= PROTOCOL_CMD_RESPONSE_OK;
+    }
+    else
+    {
+        // å‘½ä»¤å¤„ç†å¤±è´¥çš„è¯,æ£€æŸ¥æ˜¯å¦ä¸ºä¸èƒ½è¯†åˆ«çš„å‘½ä»¤
+        if (ProtocolFrame->ProtocolHandleStatus & PROTOCOL_HANDLE_UNDEFINE)
+        {
+            //			// ä¸ºä¸èƒ½è¯†åˆ«çš„å‘½ä»¤,ä¸å“åº”é€šè®¯å¸§,é€šè®¯é“¾è·¯å¤ä½å¤„ç†
+            //			ProtocolFrame->ResetProtocol(ProtocolFrame->CommID);
+            return FALSE;
+        }
+        // ä¸æ˜¯ä¸èƒ½è¯†åˆ«çš„å‘½ä»¤,è¿”å›é”™è¯¯ä¿¡æ¯å­—
+        ProtocolFrame->pFrame->CMD |= PROTOCOL_CMD_RESPONSE_ERR;
+        ProtocolFrame->pFrame->Length = 1;
+        ProtocolFrame->pFrame->Data[0] = ProtocolFrame->ProtocolHandleStatus;
+    }
+    g_Var_inst.Test[1] = 8;
+    rt_kprintf("g_Var_inst.Test[1]: 0x%02x \n", g_Var_inst.Test[1]);
+    // æ€»æ•°æ®é•¿åº¦
+    ProtocolFrame->DataCount = (4 + ProtocolFrame->pFrame->Length);
+    // è®¡ç®—æ£€éªŒå’Œ
+    Sum = 0;
+    pPacket = (U8 *)(ProtocolFrame->pFrame);
+    for (i = 0; i < ProtocolFrame->DataCount; i++)
+    {
+        Sum += *(pPacket++);
+    }
+    *(pPacket) = Sum;
+    *(pPacket + 1) = FRAME_END;
+    ProtocolFrame->DataCount += 2;
+    memcpy(Comm_PC_inst.Buffer, ProtocolFrame->pFrame, ProtocolFrame->DataCount);
+    rt_kprintf("Comm_PC_inst.Buffer: 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x 0x%02x\n",
+               Comm_PC_inst.Buffer[0], Comm_PC_inst.Buffer[1], Comm_PC_inst.Buffer[2], Comm_PC_inst.Buffer[3], Comm_PC_inst.Buffer[4], Comm_PC_inst.Buffer[5],
+               Comm_PC_inst.Buffer[6], Comm_PC_inst.Buffer[7], Comm_PC_inst.Buffer[8], Comm_PC_inst.Buffer[9], Comm_PC_inst.Buffer[10], Comm_PC_inst.Buffer[11]);
+    //å‘é€æ•°æ®
+    Comm_PC_PortSerialPutByte(Comm_PC_inst.Buffer, ProtocolFrame->DataCount);
+    return TRUE;
 }
 
-BOOL Analysis_Protocol(Comm_st* ProtocolFrame)
+BOOL Analysis_Protocol(Comm_st *ProtocolFrame)
 {
-	uint8 nCMD;
+    uint8 nCMD;
 
-	// Í¨Ñ¶ÃüÁî×Ö
-	nCMD = ProtocolFrame->pFrame->CMD;
+    // é€šè®¯å‘½ä»¤å­—
+    nCMD = ProtocolFrame->pFrame->CMD;
 
-	//Ğ­Òé´¦Àí
-	switch(nCMD)
-	{
-		case PROTOCOL_CMD_READ:	 //¶ÁÊı¾İ
-			if(Handle_CMD_READ(ProtocolFrame)==FALSE)	
-			{
-				return FALSE;				
-			}
-			break;
-		case PROTOCOL_CMD_WRITE:	//Ğ´Êı¾İ
-			Handle_CMD_Write(ProtocolFrame);	
-			break;
-		case PROTOCOL_CMD_T_ADDRESS_BAUDRATE:	 //Ğ´µØÖ·£¬²¨ÌØÂÊ
-			Handle_CMD_T_ADDRESS_BAUDRATE(ProtocolFrame);	
-			break;
-		case PROTOCOL_CMD_WRITEBAUDRATE:	//Ğ´²¨ÌØÂÊ
+    //åè®®å¤„ç†
+    switch (nCMD)
+    {
+    case PROTOCOL_CMD_READ: //è¯»æ•°æ®
+        if (Handle_CMD_READ(ProtocolFrame) == FALSE)
+        {
+            return FALSE;
+        }
+        break;
+    case PROTOCOL_CMD_WRITE: //å†™æ•°æ®
+        Handle_CMD_Write(ProtocolFrame);
+        break;
+    case PROTOCOL_CMD_T_ADDRESS_BAUDRATE: //å†™åœ°å€ï¼Œæ³¢ç‰¹ç‡
+        Handle_CMD_T_ADDRESS_BAUDRATE(ProtocolFrame);
+        break;
+    case PROTOCOL_CMD_WRITEBAUDRATE: //å†™æ³¢ç‰¹ç‡
 
-			break;
-		case PROTOCOL_CMD_TARNSPARENT:	 //Í¸´«ÃüÁî
-			if(Handle_CMD_Tansparent(ProtocolFrame)==FALSE)
-			{
-					return FALSE;
-			}
-			break;
-		default:
-			break; 
+        break;
+    case PROTOCOL_CMD_TARNSPARENT: //é€ä¼ å‘½ä»¤
+        if (Handle_CMD_Tansparent(ProtocolFrame) == FALSE)
+        {
+            return FALSE;
+        }
+        break;
+    default:
+        break;
+    }
 
-	}
-
-	// ´ò°ü·µ»ØÊı¾İ
-	if(Packet(ProtocolFrame))
-	{
-		return TRUE;
-	}
-	return FALSE;
+    // æ‰“åŒ…è¿”å›æ•°æ®
+    if (Packet(ProtocolFrame))
+    {
+        return TRUE;
+    }
+    return FALSE;
 }
