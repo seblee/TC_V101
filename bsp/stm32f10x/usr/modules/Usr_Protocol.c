@@ -13,6 +13,7 @@ Tab_DI DI_Variable[] = //变量数据标识
         //	{0x01,0x01,0x00,2,OFFSET(Var_Info,HardWare)},//
         {0x01, 0x01, 0x00, 2, offsetof(Var_Info, HardWare)},    //
         {0x01, 0x01, 0x01, 2, offsetof(Var_Info, SoftWare)},    //
+        {0x01, 0x01, 0x02, 1, offsetof(Var_Info, U1_state)},    //
         {0x11, 0x02, 0x00, 6, offsetof(Var_Info, DO)},          //
         {0x11, 0x03, 0x00, 1, offsetof(Var_Info, T_Address)},   //
         {0x11, 0x03, 0x01, 2, offsetof(Var_Info, T_Baudrate)},  //
@@ -41,7 +42,7 @@ BOOL CheckDI(ProtocolDIInfo *pDI)
             // 数据类型
             if (pDI->Type != TYPE_R) //读数据
             {
-                if (DI_VAR->DIType == 0x01) //只读
+                if (DI_VAR->DIType == TYPE_W) //只写
                 {
                     return FALSE;
                 }

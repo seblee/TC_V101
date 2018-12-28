@@ -59,12 +59,8 @@ void DO_thread_entry(void *parameter)
 		{
 			if (count > 0)
 			{
-				int i;
 				process_data_of_u1(count_rx_buffer, count);
 				rt_kprintf("count %d\n", count);
-				// for (i = 0; i < count; i++)
-				// 	rt_kprintf("%02X ", count_rx_buffer[i]);
-				// rt_kprintf("\n");
 				count = 0;
 				rt_kprintf("rec_state %d\n", Serial_State_U1_OF_M1(RT_NULL));
 			}
@@ -105,12 +101,11 @@ void DO_thread_entry(void *parameter)
 
 rt_uint8_t Serial_State_U1_OF_M1(rt_uint8_t *state)
 {
-	static rt_uint8_t U1_state = 0;
 	if (state)
 	{
-		U1_state = *state;
+		g_Var_inst.U1_state = *state;
 	}
-	return U1_state;
+	return g_Var_inst.U1_state;
 }
 
 void process_data_of_u1(unsigned char *data, rt_uint8_t len)
@@ -129,7 +124,7 @@ void process_data_of_u1(unsigned char *data, rt_uint8_t len)
 		{
 			if (*(data + i++) == 0x01)
 			{
-				rec_state++;
+				rec_state == 0x5a;
 				break;
 			}
 			else
@@ -137,7 +132,7 @@ void process_data_of_u1(unsigned char *data, rt_uint8_t len)
 		}
 	} while (i < len);
 
-	if (rec_state == 2)
+	if (rec_state == 0x5a)
 	{
 		Serial_State_U1_OF_M1(&rec_state);
 		rec_state = 0;

@@ -714,6 +714,7 @@ typedef struct
 	U16_UNION PC_Baudrate; //PC通信波特率
 	U32 Test[2];
 	U8 Buff[VAR_BUFLEN];
+	U8 U1_state;
 } Var_Info; //变量类数据
 
 //typedef struct alarm_acl_td
