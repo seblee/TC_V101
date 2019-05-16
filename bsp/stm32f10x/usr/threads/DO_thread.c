@@ -15,7 +15,7 @@ struct rx_msg
 };
 
 /* 用于接收消息的消息队列*/
-static rt_mq_t rx_mq;
+static rt_mq_t rx_mq = RT_NULL;
 /* 接收线程的接收缓冲区*/
 static unsigned char uart_rx_buffer[64];
 static unsigned char count_rx_buffer[1024];
@@ -40,7 +40,11 @@ void DO_thread_entry(void *parameter)
 	rt_uint32_t count = 0;
 
 	rx_mq = rt_mq_create("rxmq", sizeof(struct rx_msg), 5, RT_IPC_FLAG_FIFO);
-	device = rt_device_find("uart4");
+	if(rx_mq == RT_NULL)
+    {
+        
+    }
+    device = rt_device_find("uart4");
 	if (device != RT_NULL)
 	{
 		/* 设置回调函数及打开设备*/
@@ -115,21 +119,20 @@ void process_data_of_u1(unsigned char *data, rt_uint8_t len)
 	do
 	{
 		if (rec_state == 0)
-		{
-			for (; i < len; i++)
-				if (*(data + i) == 0xaa)
-					rec_state++;
+		{	
+            if (*(data + i++) == 0xaa)
+                rec_state++; 
 		}
 		else if (rec_state == 1)
 		{
 			if (*(data + i++) == 0x01)
 			{
-				rec_state == 0x5a;
+				rec_state = 0x5a;
 				break;
 			}
 			else
 				rec_state = 0;
-		}
+		}else rec_state = 0;
 	} while (i < len);
 
 	if (rec_state == 0x5a)
